@@ -3,7 +3,8 @@
 這是一個前端可部署於 GitHub Pages 的靜態網頁範例，後端使用 Google Apps Script 對 Google Sheets 進行單字點擊紀錄與查詢。
 
 ## 主要功能
-- 上傳 `.txt` 或 `.pdf` 英文文章
+- 上傳 `.txt`、`.jpg` 或 `.png` 英文文章檔案
+- 對於 `.jpg`、`.png` 圖片，使用 OCR（Tesseract.js）識別文字
 - 顯示文章內容並讓學生閱讀
 - 語音播放文章內容，並在逐句播放時同步反白
 - 單字點擊查詢發音與中文翻譯

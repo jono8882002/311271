@@ -11,12 +11,6 @@ const articleText = document.getElementById('articleText');
 const wordResult = document.getElementById('wordResult');
 const recordTable = document.getElementById('recordTable');
 
-const PDFJS_SRC_LIST = [
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.122/pdf.min.js',
-  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.122/build/pdf.min.js',
-  'https://unpkg.com/pdfjs-dist@3.11.122/build/pdf.min.js'
-];
-
 let sentences = [];
 let currentSentenceIndex = 0;
 let isPlaying = false;
@@ -25,7 +19,7 @@ let utterance = null;
 loadButton.addEventListener('click', () => {
   const file = fileInput.files[0];
   if (!file) {
-    setStatus('請先選擇 .txt 或 .pdf 檔案。');
+    setStatus('請先選擇 .txt、.jpg 或 .png 檔案。');
     return;
   }
   readFile(file);
@@ -49,88 +43,31 @@ function setStatus(message) {
 async function readFile(file) {
   setStatus('正在讀取檔案，請稍候...');
   const extension = file.name.split('.').pop().toLowerCase();
+  
   if (extension === 'txt') {
     const reader = new FileReader();
     reader.onload = () => renderArticle(reader.result);
     reader.onerror = () => setStatus('讀取文字檔時發生錯誤。');
     reader.readAsText(file, 'UTF-8');
-  } else if (extension === 'pdf') {
-    let pdfSource;
-    try {
-      pdfSource = await loadPdfJs();
-      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdf.worker.min.js', pdfSource).href;
-      }
-    } catch (error) {
-      console.error(error);
-      setStatus('無法載入 PDF.js，請確認網頁可存取 PDF.js CDN。');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const uint8 = new Uint8Array(reader.result);
-        const pdf = await window.pdfjsLib.getDocument({ data: uint8 }).promise;
-        let content = '';
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-          const page = await pdf.getPage(pageNumber);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ');
-          content += pageText + '\n\n';
-        }
-        renderArticle(content);
-      } catch (error) {
-        console.error(error);
-        setStatus('讀取 PDF 檔案時發生錯誤。');
-      }
-    };
-    reader.onerror = () => setStatus('讀取 PDF 檔案時發生錯誤。');
-    reader.readAsArrayBuffer(file);
+  } else if (extension === 'jpg' || extension === 'jpeg' || extension === 'png') {
+    await readImageFile(file);
   } else {
-    setStatus('僅支援 .txt 與 .pdf 檔案格式。');
+    setStatus('僅支援 .txt、.jpg 與 .png 檔案格式。');
   }
 }
 
-async function loadPdfJs() {
-  if (typeof window.pdfjsLib !== 'undefined') {
-    return window.pdfjsLibScriptSrc || PDFJS_SRC_LIST[0];
-  }
-  for (const src of PDFJS_SRC_LIST) {
-    try {
-      await loadScript(src);
-      if (typeof window.pdfjsLib !== 'undefined') {
-        window.pdfjsLibScriptSrc = src;
-        return src;
-      }
-    } catch (err) {
-      console.warn('PDF.js 載入失敗，嘗試下一個來源：', src, err);
-    }
-  }
-  throw new Error('PDF.js 來源全部載入失敗');
-}
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const existing = Array.from(document.scripts).find(script => script.src === src);
-    if (existing) {
-      if (existing.getAttribute('data-loaded') === 'true') {
-        resolve();
-        return;
-      }
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('PDF.js 下載錯誤：' + src)));
+async function readImageFile(file) {
+  try {
+    const { data: { text } } = await Tesseract.recognize(file, 'eng');
+    if (!text || text.trim().length === 0) {
+      setStatus('圖片中未能識別到文字，請確認圖片品質。');
       return;
     }
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    script.onload = () => {
-      script.setAttribute('data-loaded', 'true');
-      resolve();
-    };
-    script.onerror = () => reject(new Error('PDF.js 下載失敗：' + src));
-    document.head.appendChild(script);
-  });
+    renderArticle(text);
+  } catch (error) {
+    console.error('OCR 錯誤：', error);
+    setStatus('讀取圖片時發生錯誤，請確認圖片格式正確。');
+  }
 }
 
 function renderArticle(text) {
