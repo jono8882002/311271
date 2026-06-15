@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>英文文章閱讀與單字紀錄</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>英文文章閱讀與單字互動</h1>
+      <p>本程式可重複讀取 .txt 或 .pdf 英文文章，顯示文章內容，並提供語音播放、逐句同步反白、單字點擊查詢、單字點擊紀錄寫入 Google Sheets，以及查詢已點擊過的單字紀錄。</p>
+      <ul>
+        <li>上傳檔案以顯示文章內容</li>
+        <li>使用語音播放閱讀文章並逐句反白</li>
+        <li>點擊單字即可查詢發音與中文翻譯</li>
+        <li>點擊單字後會將紀錄寫入 Google Sheets</li>
+        <li>可查詢已記錄的單字與對應資料</li>
+      </ul>
+    </section>
+
+    <section class="controls">
+      <label class="file-label">
+        選擇文章檔案 (.txt 或 .pdf)
+        <input id="fileInput" type="file" accept=".txt,.pdf" />
+      </label>
+      <div class="button-row">
+        <button id="loadButton">讀取文章</button>
+        <button id="playButton">播放 / 暫停</button>
+        <button id="stopButton">停止</button>
+        <button id="queryButton">查詢單字紀錄</button>
+      </div>
+    </section>
+
+    <section class="status" id="statusMessage" aria-live="polite">請先上傳文章檔案，點選「讀取文章」開始。</section>
+
+    <section class="article-section">
+      <h2>文章內容</h2>
+      <div id="articleText" class="article-text">文章載入後會顯示在這裡。</div>
+    </section>
+
+    <section class="result-panel">
+      <h2>單字查詢結果</h2>
+      <div id="wordResult" class="word-result">點擊文章內的單字即可查詢。</div>
+    </section>
+
+    <section class="record-panel">
+      <h2>單字點擊紀錄</h2>
+      <div id="recordTable" class="record-table">按下「查詢單字紀錄」即可載入 Google Sheets 中的紀錄。</div>
+    </section>
+  </main>
+  <script src="script.js?version=2"></script>
+</body>
+</html>
